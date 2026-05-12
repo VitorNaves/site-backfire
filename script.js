@@ -1,33 +1,47 @@
-// Script para controle de animações e interações básicas
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Tratamento básico para carregamento mais suave do vídeo de background (fallback)
-    const video = document.getElementById('bg-video');
-    if (video) {
-        // Reduz a velocidade de playback do vídeo do carro soltando fogo para ficar mais cinematográfico
-        video.playbackRate = 0.8; 
-    }
+// Navbar: adiciona classe .scrolled ao rolar
+(function () {
+    const navbar = document.getElementById('navbar');
+    if (!navbar) return;
 
-    // Smooth Scroll para os links da âncora
-    const linksScroll = document.querySelectorAll('a[href^="#"]');
-    for (const link of linksScroll) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                // Offset para compensar a navbar fixa
-                const navHeight = document.querySelector('.navbar').offsetHeight;
-                const elementPosition = targetElement.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - navHeight;
-  
-                window.scrollTo({
-                     top: offsetPosition,
-                     behavior: "smooth"
-                });
+    const onScroll = () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 40);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll(); // estado inicial
+})();
+
+// Scroll reveal: cards e blocos entram suavemente ao aparecer na tela
+(function () {
+    const style = document.createElement('style');
+    style.textContent = `
+        [data-animate] {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+        }
+        [data-animate].visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    `;
+    document.head.appendChild(style);
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                // Pequeno stagger entre os cards
+                const delay = entry.target.dataset.delay || 0;
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, Number(delay));
+                observer.unobserve(entry.target);
             }
         });
-    }
-});
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('[data-animate]').forEach((el, i) => {
+        el.dataset.delay = i * 80;
+        observer.observe(el);
+    });
+})();
